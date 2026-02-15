@@ -1,4 +1,4 @@
-add_library(DWM1000 DW1000Time.cpp DW1000.cpp DW1000Device.cpp DW1000Mac.cpp DW1000Ranging.cpp m_log.cpp)
+add_library(DWM1000 DW1000Time.cpp DW1000.cpp DW1000Device.cpp DW1000Mac.cpp DW1000Ranging.cpp)
 
 target_include_directories(DWM1000  PUBLIC ${CMAKE_SOURCE_DIR})
 
