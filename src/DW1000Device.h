@@ -1,23 +1,23 @@
-#ifndef __DW1000DEVICE_H__
-#define __DW1000DEVICE_H__
+#pragma once
 
 #define INACTIVITY_TIME 2000
 
 #include "DW1000Time.h"
-#include "portables.h"
+#include "portable.h"
 
 class DW1000Device
 {
 public:
 	// Constructor and destructor
 	DW1000Device(PortableCode &);
-	DW1000Device(PortableCode &,uint8_t shortAddress[]);
+	DW1000Device(PortableCode &, uint8_t shortAddress[]);
 	void operator=(const DW1000Device &dev) { _portable = dev._portable; }
+
 	~DW1000Device();
 
 	// Setters
 	void setShortAddress(uint8_t address[]);
-	void setPayload(float payload) {_payload = payload;}
+	void setPayload(float payload) { _payload = payload; }
 	void setIndex(uint8_t index) { _index = index; }
 	void setRange(float range) { _range = range; }
 	void setRXPower(float power) { _RXPower = power; }
@@ -49,18 +49,19 @@ public:
 	DW1000Time timeRangeSent;
 	DW1000Time timeRangeReceived;
 
-	bool hasSentPoolAck;
+	bool hasSentPollAck;
+	bool hasRangeBeenServed;
 
 	DW1000Time timePollAckReceivedMinusPollSent;
 	DW1000Time timeRangeSentMinusPollAckReceived;
 
 	void noteActivity();
 	bool isInactive();
+	void setExpectedMessageID(uint8_t id) { _expectedMessageID = id; }
+	uint8_t getExpectedMessageID() { return _expectedMessageID; }
 
 private:
-
-    PortableCode &_portable;
-
+	PortableCode &_portable;
 	uint8_t _shortAddress[2];
 	unsigned long _activity;
 	uint16_t _replyDelayTimeUs;
@@ -71,6 +72,5 @@ private:
 	float _FPPower;
 	float _quality;
 	float _payload;
+	uint8_t _expectedMessageID;
 };
-
-#endif /*! __DW1000DEVICE_H__ */

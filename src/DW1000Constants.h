@@ -1,9 +1,4 @@
-#ifndef __DW1000CONSTANTS_H__
-#define __DW1000CONSTANTS_H__
-
-// SPI Speeds supported
-#define SPI_SPEED_HIGH   20000000L
-#define SPI_SPEED_LOW     2000000L
+#pragma once
 
 // time stamp byte length
 #define LEN_STAMP 5
@@ -276,5 +271,3 @@
 
 #define GPIO_MODE 0
 #define LED_MODE 1
-
-#endif /*! __DW1000CONSTANTS_H__ */

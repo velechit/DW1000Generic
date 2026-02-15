@@ -1,10 +1,12 @@
+#pragma once
+
 #include "DW1000.h"
 #include "DW1000Time.h"
 #include "DW1000Device.h"
 #include "DW1000Mac.h"
 
 // messages used in the ranging protocol
-enum class MessageType : uint8_t 
+enum class MessageType : uint8_t
 {
 	POLL = 0,
 	POLL_ACK = 1,
@@ -36,7 +38,7 @@ enum class MessageType : uint8_t
 #define DEFAULT_REPLY_DELAY_TIME 3000
 
 // sketch type (anchor or tag)
-enum class BoardType : uint8_t 
+enum class BoardType : uint8_t
 {
 	TAG = 0,
 	ANCHOR = 1,
@@ -47,36 +49,31 @@ enum class BoardType : uint8_t
 
 #define ENABLE_RANGE_REPORT false
 
-class DW1000RangingClass
+class DW1000Ranging
 {
 public:
-    DW1000RangingClass(PortableCode &portable):_portable(portable), pDW1000(portable) { }
-
+	DW1000Ranging(PortableCode &_port) : _portable(_port), pDW1000(_port) {}
 	// Initialization
-	void init(BoardType type, const char *wifiMacAddress, bool high_power, const uint8_t mode[], float payload = 0.0);
+	void init(BoardType type, uint16_t shortAddress, const char *wifiMacAddress, bool high_power, const uint8_t mode[], uint8_t myRST = DEFAULT_RST_PIN, uint8_t mySS = DEFAULT_SPI_SS_PIN, uint8_t myIRQ = DEFAULT_SPI_IRQ_PIN, float payload = 0.0);
+	void init(BoardType type, const uint8_t *wifiMacAddress, uint16_t shortAddress, bool high_power, const uint8_t mode[], uint8_t myRST = DEFAULT_RST_PIN, uint8_t mySS = DEFAULT_SPI_SS_PIN, uint8_t myIRQ = DEFAULT_SPI_IRQ_PIN, float payload = 0.0);
 
 	void loop();
 
 	// Handlers
-	void attachNewRange(std::function<void(DW1000Device *)> handleNewRange) { _handleNewRange = handleNewRange; };
-	void attachRangeSent(std::function<void(DW1000Device *)>handleRangeSent) { _handleRangeSent = handleRangeSent; };
-	void attachBlinkDevice(std::function<void(DW1000Device *)>handleBlinkDevice) { _handleBlinkDevice = handleBlinkDevice; };
-	void attachNewDevice(std::function<void(DW1000Device *)>handleNewDevice) { _handleNewDevice = handleNewDevice; };
-	void attachInactiveDevice(std::function<void(DW1000Device *)>handleInactiveDevice) { _handleInactiveDevice = handleInactiveDevice; };
-	void attachRemovedDeviceMaxReached(std::function<void(DW1000Device *)>handleRemovedDeviceMaxReached) { _handleRemovedDeviceMaxReached = handleRemovedDeviceMaxReached; };
-	
-private:
-    PortableCode &_portable;
+	void attachNewRange(void (*handleNewRange)(DW1000Device *)) { _handleNewRange = handleNewRange; };
+	void attachRangeSent(void (*handleRangeSent)(DW1000Device *)) { _handleRangeSent = handleRangeSent; };
+	void attachBlinkDevice(void (*handleBlinkDevice)(DW1000Device *)) { _handleBlinkDevice = handleBlinkDevice; };
+	void attachNewDevice(void (*handleNewDevice)(DW1000Device *)) { _handleNewDevice = handleNewDevice; };
+	void attachInactiveDevice(void (*handleInactiveDevice)(DW1000Device *)) { _handleInactiveDevice = handleInactiveDevice; };
+	void attachRemovedDeviceMaxReached(void (*handleRemovedDeviceMaxReached)(DW1000Device *)) { _handleRemovedDeviceMaxReached = handleRemovedDeviceMaxReached; };
+	void attachTimeoutExtReq(void (*requestTimeoutExtention)()) { _requestTimeoutExtention = requestTimeoutExtention; }
 
-    static constexpr short rangeDeviceSize = 16;
-	static constexpr short pollDeviceSize = 4;
-	static constexpr uint8_t devicePerPollTransmit = 4;
-	static constexpr uint8_t pollAckTimeSlots = 6;
+private:
+	PortableCode &_portable;
+	DW1000 pDW1000;
 
 	// Initialization
-    void initCommunication();
-	
-	uint16_t getShortAddr(const char *);
+	void initCommunication(uint8_t myRST, uint8_t mySS, uint8_t myIRQ);
 
 	// variables
 	// data buffer
@@ -106,11 +103,15 @@ private:
 	void visualizeDatas(uint8_t datas[]);
 
 private:
-    DW1000Class pDW1000;
+	static constexpr const char *DW_RANGING = "dw1000_ranging";
 	// Other devices in the network
-	std::vector<DW1000Device> _networkDevices;
-	// DW1000Device _networkDevices[MAX_DEVICES];
 
+	static constexpr short rangeDeviceSize = 16;
+	static constexpr short pollDeviceSize = 4;
+	static constexpr uint8_t pollAckTimeSlots = 6;
+	static constexpr uint8_t devicePerPollTransmit = 4;
+
+	std::vector<DW1000Device> _networkDevices;
 	volatile uint8_t _networkDevicesNumber;
 	uint8_t _ownLongAddress[8];
 	uint8_t _ownShortAddress[2];
@@ -119,27 +120,28 @@ private:
 	uint32_t lastTimerTick;
 	uint32_t _replyTimeOfLastPollAck;
 	uint32_t _timeOfLastPollSent;
-	uint16_t _addressOfExpectedLastPollAck;
-    float _payload;
+	float _payload;
 	int16_t counterForBlink;
 
 	// Handlers
-	std::function<void(DW1000Device *)> _handleNewRange;
-	std::function<void(DW1000Device *)> _handleRangeSent;
-	std::function<void(DW1000Device *)> _handleBlinkDevice;
-	std::function<void(DW1000Device *)> _handleNewDevice;
-	std::function<void(DW1000Device *)> _handleInactiveDevice;
-	std::function<void(DW1000Device *)> _handleRemovedDeviceMaxReached;
+	void (*_handleNewRange)(DW1000Device *);
+	void (*_handleRangeSent)(DW1000Device *);
+	void (*_handleBlinkDevice)(DW1000Device *);
+	void (*_handleNewDevice)(DW1000Device *);
+	void (*_handleInactiveDevice)(DW1000Device *);
+	void (*_handleRemovedDeviceMaxReached)(DW1000Device *);
+	void (*_requestTimeoutExtention)();
 
 	// Board type (tag or anchor)
 	BoardType _type;
-	// Message flow state
-	volatile MessageType _expectedMsgId;
 	// Message sent/received state
 	volatile bool _sentAck;
 	volatile bool _receivedAck;
 	// Protocol error state
 	bool _protocolFailed;
+	// Reset line to the chip
+	uint8_t _RST;
+	uint8_t _SS;
 	// Watchdog and reset period
 	uint32_t _lastActivity;
 	uint32_t _resetPeriod;
@@ -149,6 +151,7 @@ private:
 	uint16_t _rangeInterval;
 	// Ranging counter (per second)
 	uint32_t _rangingCountPeriod;
+	bool _first;
 
 	// Methods
 	void handleSent();
@@ -165,7 +168,7 @@ private:
 	void transmit(uint8_t datas[]);
 	void transmit(uint8_t datas[], DW1000Time time);
 	void transmitBlink();
-	void transmitRangingInit(uint16_t delay = 0);
+	void transmitRangingInit(DW1000Device *myDistantDevice, uint16_t delay = 0);
 	void transmitPollAck(DW1000Device *myDistantDevice, uint16_t delay);
 	void transmitRangeReport(DW1000Device *myDistantDevice, uint16_t delay);
 	void transmitRangeFailed(DW1000Device *myDistantDevice);
@@ -180,5 +183,3 @@ private:
 	void computeRangeAsymmetric(DW1000Device *myDistantDevice, DW1000Time *myTOF);
 	uint16_t getReplyTimeOfIndex(int i);
 };
-
-extern DW1000RangingClass DW1000Ranging;

@@ -77,7 +77,7 @@ void DW1000Mac::generateLongMACFrame(uint8_t frame[], uint8_t sourceShortAddress
 	frame[3] = 0xCA;
 	frame[4] = 0xDE;
 
-	// destination address (8 bytes) - we need to reverse the byte array
+	// destination address (8 bytes) - we need to reverse the uint8_t array
 	frame[5] = destinationAddress[7];
 	frame[6] = destinationAddress[6];
 	frame[7] = destinationAddress[5];

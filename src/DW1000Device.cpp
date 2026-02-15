@@ -2,23 +2,24 @@
 #include "DW1000.h"
 
 // Constructor and destructor
-DW1000Device::DW1000Device(PortableCode &portable):_portable(portable)
+DW1000Device::DW1000Device(PortableCode &portable) : _portable(portable)
 {
 	noteActivity();
 }
-
-DW1000Device::DW1000Device(PortableCode &portable,uint8_t shortAddress[]):_portable(portable)
+DW1000Device::DW1000Device(PortableCode &portable, uint8_t shortAddress[]) : _portable(portable)
 {
 	// we set the 2 bytes address
 	setShortAddress(shortAddress);
 	noteActivity();
 }
 
-DW1000Device::~DW1000Device() { }
+DW1000Device::~DW1000Device() {}
 
 // setters:
-void DW1000Device::setShortAddress(uint8_t deviceAddress[]) { memcpy(_shortAddress, deviceAddress, 2); }
-
+void DW1000Device::setShortAddress(uint8_t deviceAddress[])
+{
+	memcpy(_shortAddress, deviceAddress, 2);
+}
 
 uint16_t DW1000Device::getShortAddress()
 {
@@ -40,4 +41,3 @@ bool DW1000Device::isInactive()
 	// One second of inactivity
 	return _portable.millis() - _activity > INACTIVITY_TIME;
 }
-
