@@ -6,9 +6,7 @@ TODO:
   
 - [x] Make DW1000 portable
 - [x] Create IDF Port
-- [x] Create Arduino Port *
 - [x] Test IDF Port
-- [x] Test Arduino Port *
 - [ ] Create RP2040 Port
 - [ ] Test RP2040 Port
 
